@@ -7,9 +7,15 @@ import { LiaFacebook } from "react-icons/lia"
 import { RiTwitterXLine, RiMenu5Fill } from "react-icons/ri"
 import { useState, useEffect } from "react"
 import { useWindowSize } from "@uidotdev/usehooks"
+import { getProviders, useSession, signIn, signOut } from "next-auth/react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { SIGN_IN } from "@/routes"
 const Navbar = () => {
+    const isUserLoggedin = false
     const size = useWindowSize()
     const [mobileMenu, setMobileMenu] = useState(false)
+
     useEffect(() => {
         if (size?.width && size?.width > 640) {
             setMobileMenu(false)
@@ -29,7 +35,9 @@ const Navbar = () => {
     return (
         <header className='p-3  border-b border-border relative '>
             <div className='flex items-center justify-between sm:container'>
-                <h3 className='font-semibold text-2xl z-10 relative'>UREMO</h3>
+                <h3 className='font-semibold text-2xl z-10 relative'>
+                    <Link href='/'>UREMO </Link>
+                </h3>
 
                 <nav className='z-10'>
                     <ul className='hidden justify-between sm:flex'>
@@ -41,11 +49,34 @@ const Navbar = () => {
                                 </Link>
                             </Button>
                         </li>
-                        <li>
-                            <Button asChild className='mx-3' variant='ghost'>
-                                <Link href={"/"}>Sign In</Link>
-                            </Button>
-                        </li>
+                        {isUserLoggedin ? (
+                            <li>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Avatar className='h-9 w-9 mx-3'>
+                                            <AvatarImage src='https://github.com/shadcn.png' />
+                                            <AvatarFallback>CN</AvatarFallback>
+                                        </Avatar>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align='end'>
+                                        <DropdownMenuItem>
+                                            <Link href={"/"}> My Profile</Link>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem>
+                                            <Button className='text-md w-full ' variant='destructive' onClick={() => signOut()}>
+                                                Sign Out
+                                            </Button>
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </li>
+                        ) : (
+                            <li>
+                                <Button asChild className='mx-3' variant='ghost'>
+                                    <Link href={SIGN_IN}>Sign In</Link>
+                                </Button>
+                            </li>
+                        )}
                         <li>
                             <Button variant='outline' size='icon' className='mr-2'>
                                 <RiTwitterXLine className='h-4 w-4' />
@@ -70,11 +101,27 @@ const Navbar = () => {
             </div>
             {mobileMenu && (
                 <ul className='sm:hidden h-screen w-screen absolute top-0 left-0 pt-16 flex flex-col  bg-background z-[1]'>
-                    <li className=' border-y border-border py-3 text-center'>
-                        <Button asChild className='text-md' variant='link'>
-                            <Link href={"/"}>Sign In</Link>
-                        </Button>
-                    </li>
+                    {isUserLoggedin ? (
+                        <>
+                            <li className=' border-y border-border text-center py-3'>
+                                <Button className='text-lg ' variant='link'>
+                                    <Link href={"/"}> My Profile</Link>
+                                </Button>
+                            </li>
+                            <li className='block border-y border-border'>
+                                <Button className='text-lg w-full h-16 rounded-none' variant='destructive' onClick={() => signOut()}>
+                                    Sign Out
+                                </Button>
+                            </li>
+                        </>
+                    ) : (
+                        <li className=' border-y border-border py-3 text-center'>
+                            <Button className='text-md w-full' variant='link' onClick={() => setMobileMenu(false)}>
+                                <Link href={SIGN_IN}>Sign In</Link>
+                            </Button>
+                        </li>
+                    )}
+
                     <div className='flex max-w-15 justify-center py-5'>
                         <li>
                             <Button variant='outline' size='icon' className='mr-2'>
