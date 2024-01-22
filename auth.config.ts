@@ -1,11 +1,11 @@
 import type { NextAuthConfig } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { LoginSchema } from "./lib/schema"
-import { connectDB } from "@/lib/database"
-import users from "@/models/users"
 import bcrypt from "bcryptjs"
 import Google from "next-auth/providers/google"
 import Discord from "next-auth/providers/discord"
+import { getUserByEmail } from "@/data/user"
+
 export default {
     providers: [
         Discord({
@@ -35,25 +35,24 @@ export default {
                 if (validatedFields.success) {
                     const { email, password } = validatedFields.data
 
-                    await connectDB()
-                    const user = await users.findOne({ email: email })
+                    const user = await getUserByEmail(email)
                     if (!user || !user.password) return null
 
                     const passwordsMatch = await bcrypt.compare(password, user.password)
                     console.log("matchpassword", passwordsMatch, user)
-                    if (passwordsMatch)
-                        return {
-                            id: user._id.toString(),
-                            email: user.email,
-                            name: user.name,
-                            emailVerified: user.emailVerified,
-                            image: user.image,
-                            role: user.guest,
-                            accounts: user.guest,
-                            onBoarded: user.onBoarded,
-                            createdAt: user.createdAt,
-                            updatedAt: user.updatedAt,
-                        }
+                    if (passwordsMatch) return user
+                    // return {
+                    //     id: user._id,
+                    //     email: user.email,
+                    //     name: user.name,
+                    //     emailVerified: user.emailVerified,
+                    //     image: user.image,
+                    //     role: user.guest,
+                    //     accounts: user.guest,
+                    //     onBoarded: user.onBoarded,
+                    //     createdAt: user.createdAt,
+                    //     updatedAt: user.updatedAt,
+                    // }
                 }
                 return null
             },

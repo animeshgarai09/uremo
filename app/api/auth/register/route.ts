@@ -1,7 +1,8 @@
+"use server"
 import { RegisterSchema } from "@/lib/schema"
 import { NextResponse } from "next/server"
-import { connectDB } from "@/lib/database"
-import users from "@/models/users"
+import { db } from "@/lib/db"
+import { getUserByEmail } from "@/data/user"
 import bcrypt from "bcryptjs"
 
 export const POST = async (req: Request) => {
@@ -11,12 +12,18 @@ export const POST = async (req: Request) => {
     }
     const { name, email, password } = validatedFields.data
     const hashPassword = await bcrypt.hash(password, 10)
-    await connectDB()
+    const existingUser = await getUserByEmail(email)
 
-    await users.create({
-        name,
-        email,
-        password: hashPassword,
+    if (existingUser) {
+        return NextResponse.json({ error: "Email already in use!" })
+    }
+
+    await db.user.create({
+        data: {
+            name,
+            email,
+            password: hashPassword,
+        },
     })
     return NextResponse.json({ msg: "Success" })
 }
